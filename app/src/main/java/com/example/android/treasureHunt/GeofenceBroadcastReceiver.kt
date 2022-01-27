@@ -35,9 +35,51 @@ import com.google.android.gms.location.GeofencingEvent
  * message associated with each Geofence.
  */
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
-
+    
     override fun onReceive(context: Context, intent: Intent) {
         // TODO: Step 11 implement the onReceive method
+        //Check that the intent’s action
+        if (intent.action == ACTION_GEOFENCE_EVENT) {
+            val geofencingEvent = GeofencingEvent.fromIntent(intent)
+            
+            //In the case that there is an error, you will want to understand what went wrong.
+            if (geofencingEvent.hasError()) {
+                val errorMessage = errorMessage(context, geofencingEvent.errorCode)
+                Log.e(TAG, errorMessage)
+                return
+            }
+            
+            //Check if the geofenceTransition type is ENTER.
+            if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+                Log.v(TAG, context.getString(R.string.geofence_entered))
+                //If the triggeringGeofences array is not empty, set the fenceID to the first geofence’s requestId
+                val fenceId = when {
+                    geofencingEvent.triggeringGeofences.isEmpty() -> geofencingEvent.triggeringGeofences[0].requestId
+                    else -> {
+                        Log.e(TAG, "No Geofence Trigger Found! Abort mission!")
+                        return
+                    }
+                }
+                
+                //Check that the geofence is consistent with the constants listed in GeofenceUtil.kt.
+             
+                val foundIndex = GeofencingConstants.LANDMARK_DATA.indexOfFirst {
+                    it.id == fenceId
+                }
+    
+                // If not, print a log and return.
+                if (-1 == foundIndex) {
+                    Log.e(TAG, "Unknown Geofence: Abort Mission")
+                    return
+                }
+                
+                //user has found a valid geofence. Send a notification
+                val notificationManager = ContextCompat.getSystemService(context,
+                        NotificationManager::class.java) as NotificationManager
+                
+                notificationManager.sendGeofenceEnteredNotification(context, foundIndex)
+            }
+        }
     }
 }
 
