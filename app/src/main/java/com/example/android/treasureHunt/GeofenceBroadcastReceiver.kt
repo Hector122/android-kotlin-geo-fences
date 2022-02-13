@@ -54,7 +54,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                 Log.v(TAG, context.getString(R.string.geofence_entered))
                 //If the triggeringGeofences array is not empty, set the fenceID to the first geofence’s requestId
                 val fenceId = when {
-                    geofencingEvent.triggeringGeofences.isEmpty() -> geofencingEvent.triggeringGeofences[0].requestId
+                    geofencingEvent.triggeringGeofences.isNotEmpty() -> geofencingEvent.triggeringGeofences[0].requestId
                     else -> {
                         Log.e(TAG, "No Geofence Trigger Found! Abort mission!")
                         return
